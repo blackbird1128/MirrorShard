@@ -4,17 +4,18 @@
 
 
 
-Lambertian::Lambertian(Vec3 albed)
+Lambertian::Lambertian(Color albed)
 {
 	albedo = albed;
 
 }
 
-bool Lambertian::scatter(Ray& rayIn, HitRecord& rec, Vec3& attenuation, Ray& scattered)
+bool Lambertian::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
 {
 	Vec3 target = rec.p + rec.normal  + utils::randomInUnitSphere();
 	scattered = Ray(rec.p, target - rec.p);
 	attenuation = albedo - attenuation;
+
 	return true;
 }
 

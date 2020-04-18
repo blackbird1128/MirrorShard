@@ -9,7 +9,7 @@ public:
 
 
 
-
+	
 	Vec3 origin;
 	Vec3 lowerLeftCorner;
 	Vec3 horizontal;

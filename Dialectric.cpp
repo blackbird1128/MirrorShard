@@ -2,7 +2,7 @@
 #include "Material.h"
 #include "MathUtils.hpp"
 
-Dialectric::Dialectric(float sdIndex , Vec3  albed )
+Dialectric::Dialectric(float sdIndex , Color  albed )
 {
 	refractiveIndex = sdIndex;
 	albedo = albed;
@@ -19,7 +19,9 @@ bool Dialectric::refract(const Vec3& v, Vec3& n, float niOverNt, Vec3& refracted
 {
 	Vec3 uv = unitVector(v);
 	float dt = dot(uv, n);
-	float discriminant = 1.0 - niOverNt * niOverNt * (1 - dt * dt);
+	float dt2 = dt * dt;
+	float discriminant = 1.0 - niOverNt * niOverNt * (1 - dt2 );
+
 	if (discriminant > 0)
 	{
 		refracted = niOverNt * (uv - n * dt) - n * sqrt(discriminant);
@@ -31,7 +33,7 @@ bool Dialectric::refract(const Vec3& v, Vec3& n, float niOverNt, Vec3& refracted
 	}
 }
 
-bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, Vec3& attenuation, Ray& scattered)
+bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
 {
 	Vec3 outwardNormal;
 	Vec3 reflected = reflect(rayIn.direction(), rec.normal);

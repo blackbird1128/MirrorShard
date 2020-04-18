@@ -1,7 +1,7 @@
 #include "Metal.h"
 #include "MathUtils.hpp"
 #include <random>
-Metal::Metal(const Vec3& alb, float f)
+Metal::Metal(const Color& alb, float f)
 {
 
 	albedo = alb;
@@ -10,7 +10,7 @@ Metal::Metal(const Vec3& alb, float f)
 
 
 
-bool Metal::scatter(Ray& rayIn, HitRecord& rec, Vec3& attenuation, Ray& scattered)
+bool Metal::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
 {
 	
 	Vec3 reflected = reflect(unitVector(rayIn.direction()), rec.normal);

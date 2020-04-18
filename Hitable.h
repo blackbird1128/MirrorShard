@@ -9,8 +9,7 @@ class HitRecord
 {
 public:
 	float t =0;
-	float transparency = 1;
-	float normalisedDistInMat;
+	float normalisedDistInMat = 0;
 	Vec3 p = {};
 	Vec3 normal = {};
 	std::shared_ptr<Material> mat;

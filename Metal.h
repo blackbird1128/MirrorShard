@@ -6,11 +6,11 @@ class Metal : public Material
 
 public:
 
-	Metal(const Vec3& alb ,float f =0);
-	bool scatter(Ray& rayIn, HitRecord& rec, Vec3& attenuation, Ray& scattered);
+	Metal(const Color& alb ,float f =0);
+	bool scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered);
 
 private:
-	Vec3 albedo;
+	Color albedo;
 	float fuzz;
 
 };
