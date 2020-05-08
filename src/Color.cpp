@@ -16,7 +16,7 @@ Color::Color(float red, float green, float blue)
 
 }
 
-void Color::clamp()
+Color Color::clamp()
 {
 	if (r > 1)
 	{
@@ -44,6 +44,7 @@ void Color::clamp()
 	{
 		b = 0;
 	}
+	return *this;
 }
 
 Color Color::operator+=(Color a)

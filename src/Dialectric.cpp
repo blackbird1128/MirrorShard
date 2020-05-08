@@ -22,7 +22,7 @@ bool Dialectric::refract(const Vec3& v, Vec3& n, float niOverNt, Vec3& refracted
 	float dt2 = dt * dt;
 	float discriminant = 1.0 - niOverNt * niOverNt * (1 - dt2 );
 
-	if (discriminant > 0)
+	if (discriminant > 0.001)
 	{
 		refracted = niOverNt * (uv - n * dt) - n * sqrt(discriminant);
 		return true;
@@ -38,7 +38,7 @@ bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& sc
 	Vec3 outwardNormal;
 	Vec3 reflected = reflect(unitVector(rayIn.direction()), rec.normal);
 	float niOverNt;
-	attenuation = albedo;
+	attenuation = Color(1.0,1.0,1.0);
 	Vec3 refracted;
 	float cosine;
 	float reflectProb;
@@ -69,12 +69,12 @@ bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& sc
 
 	}
 
-	attenuation = albedo;
+
 	if (utils::quickRandom() < reflectProb) {
 		Vec3 rdInSphere = utils::randomInUnitSphere();
 
 		scattered = Ray(rec.p, reflected +  rdInSphere);
-		attenuation = albedo;
+
 		return (dot(scattered.direction(), rec.normal) > 0);
 
 	}

@@ -12,10 +12,9 @@ Lambertian::Lambertian(Color albed)
 
 bool Lambertian::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
 {
-	Vec3 target = rec.p + rec.normal  + utils::randomInUnitSphere();
+	Vec3 target = rec.p + rec.normal + utils::randomInUnitSphere();
 	scattered = Ray(rec.p, target - rec.p);
-	attenuation = albedo - attenuation;
-
+	attenuation = (albedo - attenuation);
 	return true;
 }
 

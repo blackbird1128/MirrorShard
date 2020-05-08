@@ -4,7 +4,7 @@ class Color
 public:
 	Color();
 	Color(float r, float g, float b); // color in [0,1] range
-	void clamp();
+	Color clamp();
 
 	Color operator+=(Color a);
 

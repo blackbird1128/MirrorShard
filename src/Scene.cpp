@@ -16,7 +16,7 @@ bool Scene::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 		{
 			hitAnything = true;
 			closestSoFar = tempRec.t;
-			rec = std::move(tempRec);
+			rec = tempRec;
 		}
 	}
 	return hitAnything;
@@ -27,4 +27,15 @@ bool Scene::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 void Scene::addObject(std::unique_ptr<Hitable> obj)
 {
 	Objects.push_back(std::move(obj));
+}
+
+void Scene::addObject(std::unique_ptr<Model> model)
+{
+	for (int i = 0; i < model->triangles.size(); i++)
+	{
+		Objects.push_back(std::make_unique<Triangle>(model->triangles[i]));
+
+	}
+
+
 }

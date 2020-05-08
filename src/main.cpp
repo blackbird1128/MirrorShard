@@ -17,7 +17,8 @@
 #include "MathUtils.hpp"
 #include "Image.h"
 #include "Triangle.h"
-
+#include "Model.h"
+#include "MathUtils.hpp"
 Color color(Ray& r, Scene& word, int depth  )
 {
 	HitRecord rec;
@@ -26,10 +27,10 @@ Color color(Ray& r, Scene& word, int depth  )
 		Ray scattered;
 		Color attenuation;
 		
-		if (depth < 50 && rec.mat->scatter(r, rec, attenuation, scattered))
+		if (depth < 5 && rec.mat->scatter(r, rec, attenuation, scattered))
 		{
 			depth += 1;
-			return attenuation * color(scattered, word, depth );
+			return (attenuation * color(scattered, word, depth )).clamp();
 
 		}
 		else
@@ -55,7 +56,7 @@ Color color(Ray& r, Scene& word, int depth  )
 int main()
 {
 
-	float scaleFactor =  3;
+	float scaleFactor = 2;
 	int nx = 160*scaleFactor;
 	int ny = 90*scaleFactor;
 	int nr =  100;
@@ -70,21 +71,19 @@ int main()
 
 
 
+
+
 	std::uniform_real_distribution<> dis(0, 1);
 	std::random_device rd;
 	std::mt19937 gen;
 
-	auto t0 = std::make_unique<Triangle>(Vec3(-1, -1, -1), Vec3(1, -1, -1), Vec3(0, 1, -1));
-	t0->setMaterial(std::make_shared<Metal>(Color(0.2, 0.3, 0.5)));
+	auto t0 = std::make_unique<Triangle>(Vec3(-0.5, -0.15, -3), Vec3(0.5, -0.15, -3), Vec3(0, 0.5, -3));
+	t0->setMaterial(std::make_shared<Lambertian>(Color(0.2,0.2,0.7)));
 	auto s1 = std::make_unique<Sphere>(Vec3(0.0, 0, -1), 0.5);
-	s1->setMaterial(std::make_shared<Dialectric>(1.5)  ) ;
-
-
-	auto sv = std::make_unique<Sphere>(Vec3(0.0, 0, -3.3), 0.2);
-	sv->setMaterial(std::make_shared<Metal>(Color(0.2,0.3,0.5)));
+	s1->setMaterial(std::make_shared<Dialectric>(1.51)  ) ;
 
 	auto s2 = std::make_unique<Sphere>(Vec3(0, -1000.5, -1.2), 1000);
-	s2->setMaterial(std::make_shared<Lambertian>(Color (0.7, 0.2, 0.4)));
+	s2->setMaterial(std::make_shared<Lambertian>(Color (0.4, 0.4, 0.5)));
 
 
 
@@ -92,33 +91,42 @@ int main()
 	s3->setMaterial(std::make_shared<Lambertian>( Color(0.2,0.5,0.4) ));
 
 
-	auto s4 = std::make_unique<Sphere>(Vec3(-1.2, 0, -1), 0.5);
+	auto s4 = std::make_unique<Sphere>(Vec3(-1, 0, -1), 0.5);
 	s4->setMaterial(std::make_shared<Lambertian>(Color(0.6 , 0.3 , 0.3)));
 
 
 	auto s5 = std::make_unique<Sphere>(Vec3(1, 0, -1), 0.5);
 	s5->setMaterial(std::make_shared<Lambertian>(Color(0.3, 0.7, 0.3)));
 
-	Camera cam(Vec3(-2.0 , 2.0 ,1.0) , Vec3(0.0,0.0,-1.0) , Vec3(0,2,0) , 90 , float(nx)/float(ny));
+
+	auto Cubemodel = std::make_unique<Model>();
+
+	Camera cam(Vec3(0, 0 ,2.7) , Vec3(0.0,0.0,0.0) , Vec3(0,2,0) , 50 , float(nx)/float(ny));
 	Scene mainScene;
+	Cubemodel->loadFromFile("suzanne.obj");
+	Cubemodel->setMaterial(std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2)));
 
-
-	mainScene.addObject(std::move(t0));
-	mainScene.addObject(std::move(s1));
+	//mainScene.addObject(std::move(t0));
+	//mainScene.addObject(std::move(s1));
 	//mainScene.addObject(std::move(s2));
-	/*
-	mainScene.addObject(std::move(s3));
-	mainScene.addObject(std::move(s5));
-	mainScene.addObject(std::move(s4));
-	mainScene.addObject(std::move(sv));
-	*/
+	//mainScene.addObject(std::move(s3));
+	//mainScene.addObject(std::move(s5));
+	//mainScene.addObject(std::move(s4));
+	mainScene.addObject(std::move(Cubemodel));
 
+	std::cout << "start rendering" << std::endl;
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 	start = std::chrono::system_clock::now();
 
-	for (int j = ny - 1; j >= 0; j--)
+
+
+
+
+
+
+	for (int j = ny ; j >= 0; j--)
 	{
-		for (int i = 0; i < nx; i++)
+		for (int i = 0; i <= nx; i++)
 		{
 			Color col(0, 0, 0);
 			for (int k = 0; k < nr; k++)
@@ -142,7 +150,7 @@ int main()
 		}
 
 	}
-	im.toPpmFile("test10.ppm");
+	im.toPpmFile("test15.ppm");
 	end = std::chrono::system_clock::now();
 	int elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 	std::cout << "elapsed time: " << elapsed_seconds << "s\n";
