@@ -9,6 +9,7 @@ Image::Image(int y, int x)
 
 		pixels.push_back(Color(0, 0, 0));
 	}
+
 }
 
 Color& Image::operator()(int y, int x)

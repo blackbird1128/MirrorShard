@@ -9,10 +9,11 @@ class Scene
 public:
 
 	bool hit(Ray r, float tMin, float tMax, HitRecord& rec);
-	void addObject(std::unique_ptr<Hitable> obj);
-	void addObject(std::unique_ptr<Model> model);
+	void addObject(const HittablePtr object);
+	void addObject(const Model& model);
+	std::vector<HittablePtr> Objects;
 private:
-	std::vector<std::unique_ptr<Hitable>> Objects;
+	
 
 
 

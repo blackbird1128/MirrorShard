@@ -3,7 +3,10 @@
 #include "Ray.h"
 #include "Material.h"
 #include <memory>
+#include <AABB.h>
+
 class Material;
+class AABB;
 
 class HitRecord
 {
@@ -15,9 +18,13 @@ public:
 	std::shared_ptr<Material> mat;
 };
 
-class Hitable
+
+
+class Hittable
 {
 public:
 	virtual bool hit(Ray r, float tMin, float tMax, HitRecord& rec) = 0;
+	virtual AABB getAABB() = 0;
+	virtual Vec3 getCenter() = 0;
 };
-
+using HittablePtr = std::shared_ptr<Hittable>;

@@ -37,6 +37,7 @@ Vec3 operator-(Vec3 a, Vec3 b);
 Vec3 operator*(Vec3 a , float t);
 Vec3 operator*(float t, Vec3 vec);
 Vec3 operator/(Vec3 a, float t);
+bool operator==(Vec3 a, Vec3 b);
 Vec3 unitVector(Vec3 a);
 float dot(const Vec3& vec1, const Vec3& vec2);
 float distance(Vec3	a, Vec3 b);

@@ -4,7 +4,7 @@
 #include <memory>
 #include <random>
 #include <chrono>
-#include <math.h> 
+#include <cmath>
 #include "vec3.h"
 #include "Ray.h"
 #include "Scene.h"
@@ -19,18 +19,21 @@
 #include "Triangle.h"
 #include "Model.h"
 #include "MathUtils.hpp"
-Color color(Ray& r, Scene& word, int depth  )
+#include "BVHNode.h"
+Color color(Ray& r, BVHNode& tree, int depth  )
 {
 	HitRecord rec;
-	if (word.hit(r , 0.001, std::numeric_limits<float>::max(),rec))
+	
+	if (tree.hit(r , 0.001, std::numeric_limits<float>::max(),rec))
 	{
+	
 		Ray scattered;
 		Color attenuation;
 		
 		if (depth < 5 && rec.mat->scatter(r, rec, attenuation, scattered))
 		{
-			depth += 1;
-			return (attenuation * color(scattered, word, depth )).clamp();
+
+			return (attenuation * color(scattered, tree, depth +1 )).clamp();
 
 		}
 		else
@@ -55,11 +58,12 @@ Color color(Ray& r, Scene& word, int depth  )
 
 int main()
 {
+	BVHNode node;
 
-	float scaleFactor = 2;
-	int nx = 160*scaleFactor;
-	int ny = 90*scaleFactor;
-	int nr =  100;
+	float scaleFactor = 1;
+	int nx = 1080*scaleFactor;
+	int ny = 960*scaleFactor;
+	int nr =  16;
 
 
 	Vec3 a(2, 3, 4);
@@ -68,8 +72,19 @@ int main()
 
 	Image im( ny, nx );
 
-
-
+	Triangle tri1;
+	tri1.vertex0 = Vec3(2.94f, 2, 0);
+	tri1.vertex1 = Vec3(3.4f, 2, 0);
+	tri1.vertex2 = Vec3(2.94f, 2, 0);
+	tri1.computeEdges();
+	Triangle tri2;
+	tri2.vertex0 = Vec3(2.94f, 2, 0);
+	tri2.vertex1 = Vec3(3.4f, 2, 0);
+	tri2.vertex2 = Vec3(2.94f, 2, 0);
+	if (tri1 == tri2)
+	{
+		std::cout << "equals triangles" <<  std::endl;
+	}
 
 
 
@@ -99,12 +114,13 @@ int main()
 	s5->setMaterial(std::make_shared<Lambertian>(Color(0.3, 0.7, 0.3)));
 
 
-	auto Cubemodel = std::make_unique<Model>();
+	
 
 	Camera cam(Vec3(0, 0 ,2.7) , Vec3(0.0,0.0,0.0) , Vec3(0,2,0) , 50 , float(nx)/float(ny));
 	Scene mainScene;
-	Cubemodel->loadFromFile("suzanne.obj");
-	Cubemodel->setMaterial(std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2)));
+	Model Cubemodel;
+	Cubemodel.loadFromFile("suzanne.obj");
+	Cubemodel.setMaterial(std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2)));
 
 	//mainScene.addObject(std::move(t0));
 	//mainScene.addObject(std::move(s1));
@@ -113,6 +129,9 @@ int main()
 	//mainScene.addObject(std::move(s5));
 	//mainScene.addObject(std::move(s4));
 	mainScene.addObject(std::move(Cubemodel));
+	int minNodeSize = (int )(log(mainScene.Objects.size()) / log(2)) * 2;
+	std::cout << "max node size " << minNodeSize << std::endl;
+	node = node.build(mainScene.Objects, 0, minNodeSize );
 
 	std::cout << "start rendering" << std::endl;
 	std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -122,11 +141,9 @@ int main()
 
 
 
-
-
-	for (int j = ny ; j >= 0; j--)
+	for (int j = ny   ; j >= 0; j--)
 	{
-		for (int i = 0; i <= nx; i++)
+		for (int i = 0; i < nx; i++)
 		{
 			Color col(0, 0, 0);
 			for (int k = 0; k < nr; k++)
@@ -135,7 +152,8 @@ int main()
 				float u = float(i + dis(gen)) / float(nx);
 				float v = float(j + dis(gen)) / float(ny);
 				Ray r = cam.getRay(u, v);
-				Color addedColor = color(r, mainScene, 0 );
+				Color addedColor = color(r, node, 0 );
+
 				col += addedColor;
 
 
@@ -143,6 +161,7 @@ int main()
 			}
 			col = col / nr;
 			col = Color(pow(col.r,1/2.2), pow(col.g,1/2.2), pow(col.b , 1/2.2));
+			
 			im.setPixel(j, i, col);
 
 
@@ -150,7 +169,7 @@ int main()
 		}
 
 	}
-	im.toPpmFile("test15.ppm");
+	im.toPpmFile("test17.ppm");
 	end = std::chrono::system_clock::now();
 	int elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 	std::cout << "elapsed time: " << elapsed_seconds << "s\n";

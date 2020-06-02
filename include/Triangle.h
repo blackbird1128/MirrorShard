@@ -1,7 +1,12 @@
 #pragma once
 #include "Hitable.h"
+#include <AABB.h>
 #include <memory>
-class Triangle : public Hitable
+
+
+
+
+class Triangle : public Hittable
 {
 
 public:
@@ -10,6 +15,8 @@ public:
 	bool hit(Ray r, float tMin, float tMax, HitRecord& rec);
 	void setMaterial(std::shared_ptr<Material> m );
 	void computeEdges();
+	AABB getAABB();
+	Vec3 getCenter();
 
 	Vec3 vertex0;
 	Vec3 vertex1;
@@ -24,13 +31,6 @@ public:
 private:
 	std::shared_ptr<Material> mat;
 
-
-
-
-
-
-
-
-
 };
 
+bool operator==(Triangle t1, Triangle t2);

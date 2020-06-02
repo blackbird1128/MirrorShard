@@ -1,4 +1,6 @@
 #include "Sphere.h"
+#include <AABB.h>
+
 
 Sphere::Sphere(Vec3 center, float radius)
 {
@@ -58,4 +60,21 @@ bool Sphere::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 		}
 	}
 	return false;
+}
+
+
+
+AABB Sphere::getAABB()
+{
+	return AABB(*this);
+}
+
+Vec3 Sphere::getCenter()
+{
+	return center;
+}
+
+float Sphere::getRadius()
+{
+	return radius;
 }

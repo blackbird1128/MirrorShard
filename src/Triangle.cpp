@@ -48,8 +48,6 @@ bool Triangle::hit(Ray r, float tMin, float tMax, HitRecord& rec) // https://fr.
 	rec.normal = (vertex0Normal * thirdBaryCoord + vertex1Normal * firstBaryCoord + vertex2Normal * secondBaryCoord).makeUnitVector();
 	rec.p = r.pointAt(hitDist);
 	return true;
-
-
 }
 
 void Triangle::setMaterial(std::shared_ptr<Material> m)
@@ -61,4 +59,26 @@ void Triangle::computeEdges()
 {
 	edge1 = vertex1 - vertex0;
 	edge2 = vertex2 - vertex0;
+}
+
+AABB Triangle::getAABB()
+{
+	return AABB(*this);
+}
+
+Vec3 Triangle::getCenter()
+{
+	float xCenter = (vertex0.x + vertex1.x + vertex2.x) / 3;
+	float yCenter = (vertex0.y + vertex1.y + vertex2.y) / 3;
+	float zCenter = (vertex0.z + vertex1.z + vertex2.z) / 3;
+	return Vec3(xCenter , yCenter , zCenter);
+}
+
+bool operator==(Triangle t1, Triangle t2)
+{
+	if (t1.vertex0 == t2.vertex0 && t1.vertex1 == t2.vertex1 && t1.vertex2 == t2.vertex2)
+	{
+		return true;
+	}
+	return false;
 }

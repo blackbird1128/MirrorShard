@@ -24,16 +24,16 @@ bool Scene::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 
 }
 
-void Scene::addObject(std::unique_ptr<Hitable> obj)
+void Scene::addObject(const HittablePtr object)
 {
-	Objects.push_back(std::move(obj));
+	Objects.push_back(object);
 }
 
-void Scene::addObject(std::unique_ptr<Model> model)
+void Scene::addObject(const Model& model)
 {
-	for (int i = 0; i < model->triangles.size(); i++)
+	for (int i = 0; i < model.triangles.size(); i++)
 	{
-		Objects.push_back(std::make_unique<Triangle>(model->triangles[i]));
+		Objects.push_back(std::make_shared<Triangle>(model.triangles[i]));
 
 	}
 

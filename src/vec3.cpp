@@ -132,6 +132,19 @@ Vec3 operator/(Vec3 a, float t)
 	return a*(1.0/t);
 }
 
+bool operator==(Vec3 a, Vec3 b)
+{
+	if (a.x == b.x && a.y == b.y && a.z == b.z)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
 Vec3 unitVector(Vec3 a)
 {
 	return  a / a.lenght();
