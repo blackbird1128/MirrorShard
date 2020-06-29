@@ -20,41 +20,29 @@
 #include "Model.h"
 #include "MathUtils.hpp"
 #include "BVHNode.h"
-Color color(Ray& r, BVHNode& tree, int depth  )
+#include "Light.h"
+Color color(Ray& r, BVHNode& tree, int depth)
 {
 	HitRecord rec;
-	
-	if (tree.hit(r , 0.001, std::numeric_limits<float>::max(),rec))
+	if (depth > 50)
 	{
-	
-		Ray scattered;
-		Color attenuation;
-		
-		if (depth < 5 && rec.mat->scatter(r, rec, attenuation, scattered))
-		{
-
-			return (attenuation * color(scattered, tree, depth +1 )).clamp();
-
-		}
-		else
-		{
-
-			return Color(0,0,0);
-		}
-
-
+		return Color(0, 0, 0);
 	}
-	else
+	if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
 	{
-
-		Vec3 unitDirection = unitVector(r.direction());
-		float t = 0.5 * (unitDirection.y + 1.0);
-		return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
+		return (Color(0, 0, 0));
 	}
+
+
+	Ray scattered;
+	Color attenuation;
+	Color emitted = rec.mat->getEmissive();
+	if (!rec.mat->scatter(r, rec, attenuation, scattered))
+	{
+		return emitted;
+	}
+	return emitted + attenuation * color(scattered, tree, depth +1 );
 }
-
-
-
 
 int main()
 {
@@ -63,80 +51,39 @@ int main()
 	float scaleFactor = 1;
 	int nx = 1080*scaleFactor;
 	int ny = 960*scaleFactor;
-	int nr =  16;
-
-
-	Vec3 a(2, 3, 4);
-	Vec3 b(5, 6, 7);
-	std::cout << a.crossProduct(b) << "\n";
-
-	Image im( ny, nx );
-
-	Triangle tri1;
-	tri1.vertex0 = Vec3(2.94f, 2, 0);
-	tri1.vertex1 = Vec3(3.4f, 2, 0);
-	tri1.vertex2 = Vec3(2.94f, 2, 0);
-	tri1.computeEdges();
-	Triangle tri2;
-	tri2.vertex0 = Vec3(2.94f, 2, 0);
-	tri2.vertex1 = Vec3(3.4f, 2, 0);
-	tri2.vertex2 = Vec3(2.94f, 2, 0);
-	if (tri1 == tri2)
-	{
-		std::cout << "equals triangles" <<  std::endl;
-	}
-
-
+	int nr =  400;
 
 	std::uniform_real_distribution<> dis(0, 1);
 	std::random_device rd;
 	std::mt19937 gen;
 
-	auto t0 = std::make_unique<Triangle>(Vec3(-0.5, -0.15, -3), Vec3(0.5, -0.15, -3), Vec3(0, 0.5, -3));
-	t0->setMaterial(std::make_shared<Lambertian>(Color(0.2,0.2,0.7)));
-	auto s1 = std::make_unique<Sphere>(Vec3(0.0, 0, -1), 0.5);
-	s1->setMaterial(std::make_shared<Dialectric>(1.51)  ) ;
 
-	auto s2 = std::make_unique<Sphere>(Vec3(0, -1000.5, -1.2), 1000);
-	s2->setMaterial(std::make_shared<Lambertian>(Color (0.4, 0.4, 0.5)));
+	auto s2 = std::make_shared<Sphere>(Vec3(0, -1000.5, -1.2), 1000);
+	s2->setMaterial(std::make_shared<Lambertian>(Color(0.5,0.5,0.7)));
 
 
+	auto s3 = std::make_shared<Sphere>(Vec3(3000, 4000, -4000), 2200);
+	s3->setMaterial(std::make_shared<Light>(Color(12, 12, 12)));
 
-	auto s3 = std::make_unique<Sphere>(Vec3(0, 0, -4), 0.5);
-	s3->setMaterial(std::make_shared<Lambertian>( Color(0.2,0.5,0.4) ));
+	auto s4 = std::make_shared<Sphere>(Vec3(-3000, 4000, -4000), 2200);
+	s4->setMaterial(std::make_shared<Light>(Color(15, 15, 15)));
 
-
-	auto s4 = std::make_unique<Sphere>(Vec3(-1, 0, -1), 0.5);
-	s4->setMaterial(std::make_shared<Lambertian>(Color(0.6 , 0.3 , 0.3)));
-
-
-	auto s5 = std::make_unique<Sphere>(Vec3(1, 0, -1), 0.5);
-	s5->setMaterial(std::make_shared<Lambertian>(Color(0.3, 0.7, 0.3)));
-
-
-	
-
-	Camera cam(Vec3(0, 0 ,2.7) , Vec3(0.0,0.0,0.0) , Vec3(0,2,0) , 50 , float(nx)/float(ny));
+	Camera cam(Vec3(  -920 , 1800 , 1350 ) , Vec3( 0 , 600 , 0 ) , Vec3(0,1,0) , 45 , float(nx)/float(ny));
 	Scene mainScene;
-	Model Cubemodel;
-	Cubemodel.loadFromFile("suzanne.obj");
-	Cubemodel.setMaterial(std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2)));
-
-	//mainScene.addObject(std::move(t0));
-	//mainScene.addObject(std::move(s1));
-	//mainScene.addObject(std::move(s2));
-	//mainScene.addObject(std::move(s3));
-	//mainScene.addObject(std::move(s5));
-	//mainScene.addObject(std::move(s4));
-	mainScene.addObject(std::move(Cubemodel));
-	int minNodeSize = (int )(log(mainScene.Objects.size()) / log(2)) * 2;
-	std::cout << "max node size " << minNodeSize << std::endl;
+	Model LucyModel;
+	LucyModel.loadFromFile("lucy.obj");
+	LucyModel.setMaterial(std::make_shared<Lambertian>(Color(0.4,0.4,0.5)));
+	mainScene.addObject(std::move(s2));
+	mainScene.addObject(std::move(s3));
+	mainScene.addObject(std::move(s4));
+	mainScene.addObject(std::move(LucyModel));
+	int minNodeSize = 3;;
 	node = node.build(mainScene.Objects, 0, minNodeSize );
 
 	std::cout << "start rendering" << std::endl;
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 	start = std::chrono::system_clock::now();
-
+	Image im(ny, nx);
 
 
 
@@ -160,6 +107,7 @@ int main()
 
 			}
 			col = col / nr;
+			col.clamp();
 			col = Color(pow(col.r,1/2.2), pow(col.g,1/2.2), pow(col.b , 1/2.2));
 			
 			im.setPixel(j, i, col);
@@ -169,7 +117,7 @@ int main()
 		}
 
 	}
-	im.toPpmFile("test17.ppm");
+	im.toPpmFile("test20.ppm");
 	end = std::chrono::system_clock::now();
 	int elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 	std::cout << "elapsed time: " << elapsed_seconds << "s\n";
