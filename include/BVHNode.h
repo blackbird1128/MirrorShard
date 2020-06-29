@@ -22,7 +22,7 @@ private:
 	std::unique_ptr<BVHNode> rightNode;
 	std::vector<HittablePtr> object;
 	AABB box;
-	bool isRoot;
+	bool isLeaf;
 
 
 };

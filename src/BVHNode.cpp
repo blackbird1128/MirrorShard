@@ -6,16 +6,17 @@ BVHNode::BVHNode()
 	rightNode = nullptr;
 	object = std::vector<HittablePtr>{};
 	box = AABB(Vec3(-100000, -1000000, -100000), Vec3(1000000, 1000000, 100000));
+	isLeaf = false;
 }
+
 
 BVHNode BVHNode::build(const std::vector<HittablePtr>& wordPart, std::size_t depth , int minNodeSize)
 {
-	std::cout << depth <<  "\n";
+	//std::cout << depth <<  "\n";
 	BVHNode node;
 	node.object = wordPart;
 	if (depth == 0)
 	{
-		isRoot = true;
 		box = wordPart[0]->getAABB();
 		for (int i = 0; i < object.size(); i++)
 		{
@@ -25,13 +26,16 @@ BVHNode BVHNode::build(const std::vector<HittablePtr>& wordPart, std::size_t dep
 
 	if (node.object.size() == 0 )
 	{
+		node.isLeaf = true;
 		return node;
 	}
 	if (node.object.size() == 1)
 	{
 		node.box = node.object[0]->getAABB();
 		node.leftNode = std::make_unique<BVHNode>(BVHNode());
+		node.leftNode->isLeaf = true;
 		node.rightNode = std::make_unique<BVHNode>(BVHNode());
+		node.rightNode->isLeaf = true;
 		return node;
 	}
 
@@ -76,21 +80,10 @@ BVHNode BVHNode::build(const std::vector<HittablePtr>& wordPart, std::size_t dep
 		rightObject = leftObject;
 	}
 
-	int matches = 0;
-	for (int i = 0; i < leftObject.size(); i++)
-	{
-		for (int j = 0; j < rightObject.size(); j++)
-		{
-			if (leftObject[i].get() == rightObject[j].get())
-			{
-				matches += 1;
-			}
-		}
-
-	}
 
 	if (wordPart.size() > minNodeSize )
 	{
+		node.object.clear();
 		node.leftNode = std::make_unique<BVHNode>(build(leftObject, depth + 1,minNodeSize));
 		node.rightNode = std::make_unique<BVHNode>(build(rightObject, depth + 1,minNodeSize));
 
@@ -98,19 +91,21 @@ BVHNode BVHNode::build(const std::vector<HittablePtr>& wordPart, std::size_t dep
 	else
 	{
 		node.leftNode = std::make_unique<BVHNode>(BVHNode());
+		node.leftNode->isLeaf = true;
 		node.rightNode = std::make_unique<BVHNode>(BVHNode());
+		node.rightNode->isLeaf = true;
 	}
 	
 	return node;
 }
 
-bool BVHNode::hit(Ray r, float tMin, float tMax, HitRecord& rec )
+bool BVHNode::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 {
 
 
 	if (box.hit(r))
 	{
-		if (leftNode->object.size() > 0 || rightNode->object.size() > 0)
+		if (!leftNode->isLeaf || !rightNode->isLeaf )
 		{
 			HitRecord leftRec, rightRec;
 			bool hitLeft = leftNode->hit(r, tMin, tMax, leftRec);
@@ -154,9 +149,12 @@ bool BVHNode::hit(Ray r, float tMin, float tMax, HitRecord& rec )
 				{
 					hitAnything = true;
 					closestSoFar = tempRec.t;
-					rec = tempRec;
+					
+
+					
 				}
 			}
+			rec = tempRec;
 			return hitAnything;
 
 
