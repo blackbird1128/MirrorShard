@@ -17,9 +17,9 @@ AABB::AABB(Triangle tr)
 	pMax.y = std::max(tr.vertex0.y, std::max(tr.vertex1.y, tr.vertex2.y));
 	pMax.x = std::max(tr.vertex0.x, std::max(tr.vertex1.x, tr.vertex2.x));
 
-	pMin.z = std::min(tr.vertex0.z, std::max(tr.vertex1.z, tr.vertex2.z));
-	pMin.y = std::min(tr.vertex0.y, std::max(tr.vertex1.y, tr.vertex2.y));
-	pMin.x = std::min(tr.vertex0.x, std::max(tr.vertex1.x, tr.vertex2.x));
+	pMin.z = std::min(tr.vertex0.z, std::min(tr.vertex1.z, tr.vertex2.z));
+	pMin.y = std::min(tr.vertex0.y, std::min(tr.vertex1.y, tr.vertex2.y));
+	pMin.x = std::min(tr.vertex0.x, std::min(tr.vertex1.x, tr.vertex2.x));
 }
 
 AABB::AABB(Sphere sp)
@@ -41,30 +41,27 @@ bool AABB::hit(Ray r)
 	dirFrac.x = 1.0f / r.direction().x;
 	dirFrac.y = 1.0f / r.direction().y;
 	dirFrac.z = 1.0f / r.direction().z;
-	float t;
 	float t1 = (pMin.x - r.origin().x) * dirFrac.x;
 	float t2 = (pMax.x - r.origin().x) * dirFrac.x;
-	float t3 = (pMin.x - r.origin().x) * dirFrac.x;
-	float t4 = (pMax.x - r.origin().x) * dirFrac.x;
-	float t5 = (pMin.x - r.origin().x) * dirFrac.x;
-	float t6 = (pMax.x - r.origin().x) * dirFrac.x;
+
+	float t3 = (pMin.y - r.origin().y) * dirFrac.y;
+	float t4 = (pMax.y - r.origin().y) * dirFrac.y;
+
+	float t5 = (pMin.z - r.origin().z) * dirFrac.z;
+	float t6 = (pMax.z- r.origin().z) * dirFrac.z;
 
 	float tmin = std::max( std::max( std::min(t1, t2), std::min(t3, t4))  , std::min(t5, t6) );
 	float tmax = std::min( std::min( std::max(t1, t2), std::max(t3, t4) ) , std::max(t5, t6) );
 	
 	if (tmax < 0)
 	{
-		t = tmax;
 		return false;
 	}
-
 	if (tmin > tmax)
 	{
-		t = tmax;
 		return false;
 	}
 
-	t = tmin;
 	return true;
 }
 
