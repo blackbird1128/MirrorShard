@@ -2,6 +2,7 @@
 #include "vec3.h"
 #include "Ray.h"
 #include "Material.h"
+#include "Texture.h"
 #include <memory>
 #include <AABB.h>
 
@@ -16,6 +17,7 @@ public:
 	Vec3 p = {};
 	Vec3 normal = {};
 	std::shared_ptr<Material> mat;
+	float u, v;
 };
 
 

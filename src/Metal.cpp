@@ -1,27 +1,21 @@
 #include "Metal.h"
 #include "MathUtils.hpp"
 #include <random>
-Metal::Metal(const Color& alb, float f)
+Metal::Metal(std::shared_ptr<Texture> tex, float f)
 {
 
-	albedo = alb;
+	texture = tex;
 	fuzz = f;
 }
-
-
 
 bool Metal::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
 {
 	
 	Vec3 reflected = reflect(unitVector(rayIn.direction()), rec.normal);
-
-	Vec3 rdInSphere = utils::randomInUnitSphere();
-
-	scattered = Ray(rec.p, reflected + fuzz * rdInSphere );
-
-
-	attenuation = albedo;
+	scattered = Ray(rec.p, reflected + fuzz * utils::randomInUnitSphere());
+	attenuation = texture->getColor(rec.u , rec.v);
 	return (dot(scattered.direction(), rec.normal) > 0);
+
 }
 
 

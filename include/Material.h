@@ -8,7 +8,10 @@ class Material
 {
 public:
 	virtual bool scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered) = 0;
-
+	virtual Color getEmissive()
+	{
+		return Color(0, 0, 0);
+	};
 };
 
 

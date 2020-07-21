@@ -4,9 +4,9 @@
 
 
 
-Lambertian::Lambertian(Color albed)
+Lambertian::Lambertian(std::shared_ptr<Texture> tex)
 {
-	albedo = albed;
+	matTexture = tex;
 
 }
 
@@ -14,7 +14,7 @@ bool Lambertian::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& sc
 {
 	Vec3 target = rec.p + rec.normal + utils::randomInUnitSphere();
 	scattered = Ray(rec.p, target - rec.p);
-	attenuation = (albedo - attenuation);
+	attenuation = matTexture->getColor(rec.u , rec.v);
 	return true;
 }
 

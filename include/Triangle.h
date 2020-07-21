@@ -28,6 +28,10 @@ public:
 
 	Vec3 edge1;
 	Vec3 edge2;
+
+	Vec3 vertex0uv; // use 3d vector for 2d coordinates need to be changed 
+	Vec3 vertex1uv;
+	Vec3 vertex2uv;
 private:
 	std::shared_ptr<Material> mat;
 

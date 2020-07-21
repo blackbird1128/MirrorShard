@@ -1,16 +1,17 @@
 #pragma once
 #include "Material.h"
 #include "vec3.h"
+#include "Texture.h"
 class Metal : public Material 
 {
 
 public:
 
-	Metal(const Color& alb ,float f =0);
+	Metal(std::shared_ptr<Texture> tex,float f =0);
 	bool scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered);
 
 private:
-	Color albedo;
+	std::shared_ptr<Texture> texture;
 	float fuzz;
 
 };

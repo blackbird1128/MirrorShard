@@ -43,6 +43,8 @@ bool Sphere::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 			rec.p = r.pointAt(root);
 			rec.normal = (rec.p - center) / radius;
 			rec.mat = mat;
+			rec.u = 0.5 + atan2f(rec.normal.x, rec.normal.z)/ 6.28318;
+			rec.v = 0.5 - asinf(rec.normal.y) / 3.14159;
 			return true;
 
 			
@@ -54,6 +56,8 @@ bool Sphere::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 			rec.p = r.pointAt(root);
 			rec.normal = (rec.p - center) / radius;
 			rec.mat = mat;
+			rec.u = 0.5 + atan2f(rec.normal.x, rec.normal.z) / 6.28318;
+			rec.v = 0.5 - asinf(rec.normal.y) / 3.14159;
 			return true;
 
 
