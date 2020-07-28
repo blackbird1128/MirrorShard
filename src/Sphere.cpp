@@ -1,4 +1,6 @@
 #include "Sphere.h"
+#include "ONB.h"
+#include "MathUtils.hpp"
 #include <AABB.h>
 
 
@@ -32,9 +34,6 @@ bool Sphere::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 		Vec3 enterPoint = r.pointAt(enterDistance);
 		Vec3 exitPoint = r.pointAt(exitDistance);
 		rec.normalisedDistInMat = distance(enterPoint, exitPoint) / (radius * 2);
-	
-
-
 
 		float root = (-b - sqrt(discriminant) )/ ( a);
 		if (root < tMax && root > tMin)
@@ -66,7 +65,29 @@ bool Sphere::hit(Ray r, float tMin, float tMax, HitRecord& rec)
 	return false;
 }
 
+float Sphere::pdf(Vec3& origin, Vec3& direction)
+{
+	HitRecord rec;
+	if (!this->hit(Ray(origin, direction), 0.001, std::numeric_limits<float>::max(), rec))
+	{
+		return 0;
+	}
 
+	float cosThetaMax = sqrt(1 - radius * radius / (center - origin).squaredLenght());
+	float solidAngle = 2 * 3.14159 * (1 - cosThetaMax);
+	return 1 / solidAngle;
+}
+
+
+
+Vec3 Sphere::samplePoint(Vec3& origin)
+{
+	Vec3 direction = center - origin;
+	auto distance_squared = direction.squaredLenght();
+	ONB uvw;
+	uvw.buildFromW(direction);
+	return uvw.local(utils::randomToSphere(radius, distance_squared));
+}
 
 AABB Sphere::getAABB()
 {

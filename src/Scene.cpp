@@ -1,11 +1,13 @@
 #include "Scene.h"
 #include "Sphere.h"
 #include "Hitable.h"
-
-
+#include "cosinePdf.h"
+#include "hittablePdf.h"
+#include "MixturePdf.h"
 Color Scene::color(Ray& r, BVHNode& tree, int depth)
 {
 	HitRecord rec;
+	/*
 	if (tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
 	{ 
 
@@ -26,28 +28,76 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 		float t = 0.5 * (unitDirection.y + 1.0);
 		return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
 	}
+	*/
 
-		/*
-		if (depth > 50)
-		{
-			return Color(0, 0, 0);
-		}
-		if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
-		{
-			return (Color(0, 0, 0));
-		}
+	/*
+	if (depth > 3)
+	{
+		return Color(0, 0, 0);
+	}
+
+	if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
+		return Color(0,0,0);
+
+	Ray scattered;
+	Color attenuation;
+	Color emitted = rec.mat->getEmissive();
+
+	if (!rec.mat->scatter(r, rec, attenuation, scattered))
+		return emitted;
+
+	return emitted + attenuation * color(scattered, tree, depth +1);
+	*/
 
 
-		Ray scattered;
-		Color attenuation;
-		Color emitted = rec.mat->getEmissive();
-		if (!rec.mat->scatter(r, rec, attenuation, scattered))
-		{
-			return emitted;
-		}
 
-		return emitted + attenuation * color(scattered, tree, depth +1 );
-		*/
+
+
+
+	
+	if (depth > 3)
+	{
+		return Color(0, 0, 0);
+	}
+	if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
+	{
+		return (Color(0, 0, 0));
+	}
+
+
+	Ray scattered;
+	Color albedo;
+	float pdf = 0;
+	Color emitted = rec.mat->getEmissive();
+	if (!rec.mat->scatter(r, rec, albedo, scattered))
+	{
+		return emitted;
+	}
+
+	std::vector<pdfPtr> sampledPdfs;
+	
+	for (const auto& obj : sampledObjects)
+	{
+		auto pdfo = std::make_unique<hittablePdf>(obj, rec.p);
+		sampledPdfs.push_back(std::move(pdfo));
+	}
+	
+	std::unique_ptr<cosinePdf> cosPdf = std::make_unique<cosinePdf>(rec.normal);
+	std::unique_ptr<MixturePdf> mixA = std::make_unique<MixturePdf>(std::move(sampledPdfs));
+	std::vector<pdfPtr> mixedVec;
+	mixedVec.push_back(std::move(cosPdf));
+	mixedVec.push_back(std::move(mixA));
+	MixturePdf mixB(std::move(mixedVec));
+
+
+
+	scattered = Ray(rec.p, mixB.generate());
+	Vec3 dir = scattered.direction();
+	float pdfVal = mixB.value(dir);
+
+	float scV = rec.mat->scatteringPdf(r, rec, scattered);
+	return emitted + albedo * scV * (color(scattered, tree, depth +1 )/pdfVal);
+	
 }
 
 void Scene::render(std::string filepath, int height, int width , int rayPerPixel)
@@ -133,3 +183,4 @@ void Scene::addObject(const Model& model)
 
 	}
 }
+

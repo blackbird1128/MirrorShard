@@ -9,8 +9,8 @@ class Lambertian : public Material
 {
 public:
 	Lambertian(std::shared_ptr<Texture> tex);
-	bool scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered);
-
+	bool  scatter(Ray& rayIn, HitRecord& rec, Color& albedo, Ray& scattered  ) override;
+	float  scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered);
 
 private:
 	std::shared_ptr<Texture> matTexture;

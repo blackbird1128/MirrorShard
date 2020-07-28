@@ -95,6 +95,16 @@ Vec3 Vec3::operator/(Vec3 vec2)
 	return Vec3(x / vec2.x, y / vec2.y , z/vec2.z);
 }
 
+float Vec3::max()
+{
+	return std::max(x, std::max(y, z));
+}
+
+float Vec3::min()
+{
+	return std::min(x, std::min(y, z));
+}
+
 std::ostream& operator<<(std::ostream& os, Vec3 t)
 {
 	os << t.x << " " << t.y << " " << t.z;
