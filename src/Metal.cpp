@@ -8,14 +8,20 @@ Metal::Metal(std::shared_ptr<Texture> tex, float f)
 	fuzz = f;
 }
 
-bool Metal::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
+bool Metal::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered)
 {
 	
 	Vec3 reflected = reflect(unitVector(rayIn.direction()), rec.normal);
-	scattered = Ray(rec.p, reflected + fuzz * utils::randomInUnitSphere());
-	attenuation = texture->getColor(rec.u , rec.v);
-	return (dot(scattered.direction(), rec.normal) > 0);
+	scatterRec.specular_ray = Ray(rec.p, reflected + fuzz * utils::randomInUnitSphere());
+	scatterRec.attenuation = texture->getColor(rec.u , rec.v);
+	scatterRec.pdfPointer = nullptr;
+	return true;
 
+}
+
+bool Metal::isSpecular()
+{
+	return true;
 }
 
 

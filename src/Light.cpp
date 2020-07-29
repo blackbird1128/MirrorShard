@@ -6,7 +6,7 @@ Light::Light(Color& emissive)
 	this->emissive = emissive;
 }
 
-bool Light::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
+bool Light::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered)
 {
 	return false;
 }
@@ -14,4 +14,9 @@ bool Light::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scatter
 Color Light::getEmissive()
 {
 	return emissive;
+}
+
+bool Light::isSpecular()
+{
+	return false;
 }

@@ -8,8 +8,8 @@ class Metal : public Material
 public:
 
 	Metal(std::shared_ptr<Texture> tex,float f =0);
-	bool scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered);
-
+	bool scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered) override;
+	bool isSpecular() override;
 private:
 	std::shared_ptr<Texture> texture;
 	float fuzz;

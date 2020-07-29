@@ -4,9 +4,10 @@
 #include "cosinePdf.h"
 #include "hittablePdf.h"
 #include "MixturePdf.h"
+#include "MathUtils.hpp"
 Color Scene::color(Ray& r, BVHNode& tree, int depth)
 {
-	HitRecord rec;
+
 	/*
 	if (tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
 	{ 
@@ -52,9 +53,9 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 
 
 
-
-
 	
+
+	HitRecord rec;
 	if (depth > 3)
 	{
 		return Color(0, 0, 0);
@@ -66,37 +67,53 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 
 
 	Ray scattered;
-	Color albedo;
 	float pdf = 0;
 	Color emitted = rec.mat->getEmissive();
-	if (!rec.mat->scatter(r, rec, albedo, scattered))
+	scatterRecord scatterRec;
+	if (!rec.mat->scatter(r, rec, scatterRec, scattered))
 	{
 		return emitted;
 	}
-
-	std::vector<pdfPtr> sampledPdfs;
-	
-	for (const auto& obj : sampledObjects)
+	if (rec.mat->isSpecular())
 	{
-		auto pdfo = std::make_unique<hittablePdf>(obj, rec.p);
-		sampledPdfs.push_back(std::move(pdfo));
+
+		return scatterRec.attenuation * color(scatterRec.specular_ray, tree, depth + 1);
 	}
 	
-	std::unique_ptr<cosinePdf> cosPdf = std::make_unique<cosinePdf>(rec.normal);
-	std::unique_ptr<MixturePdf> mixA = std::make_unique<MixturePdf>(std::move(sampledPdfs));
-	std::vector<pdfPtr> mixedVec;
-	mixedVec.push_back(std::move(cosPdf));
-	mixedVec.push_back(std::move(mixA));
-	MixturePdf mixB(std::move(mixedVec));
+	std::vector<pdfPtr> actualPdf;
+	for (int i = 0 ; i < sampledPdf.size();i++)
+	{
+		sampledPdf[i].setOrigin(rec.p);
+		pdfPtr temp = std::make_unique<hittablePdf>( sampledPdf[i]);
+		actualPdf.push_back(std::move(temp));
+	}
+	
 
 
+	MixturePdf hittableMix(std::move(actualPdf));
+	//std::vector<pdfPtr> secondMixVec;;
+	//secondMixVec.push_back(std::move(scatterRec.pdfPointer));
+//	secondMixVec.push_back(std::move(std::make_unique<pdfPtr>(hittableMix)));
+	//MixturePdf finalMix(std::move(secondMixVec));
 
-	scattered = Ray(rec.p, mixB.generate());
+
+	Vec3 pdfDirection;
+	if (utils::quickRandom() < 0.5)
+	{
+		pdfDirection = hittableMix.generate();
+	}
+	else
+	{
+		pdfDirection = scatterRec.pdfPointer->generate();
+	}
+
+
+	scattered = Ray(rec.p,pdfDirection);
 	Vec3 dir = scattered.direction();
-	float pdfVal = mixB.value(dir);
-
+	float pdfVal = hittableMix.value(dir) * 0.5 + 0.5 * scatterRec.pdfPointer->value(dir);
+;
 	float scV = rec.mat->scatteringPdf(r, rec, scattered);
-	return emitted + albedo * scV * (color(scattered, tree, depth +1 )/pdfVal);
+	return emitted + scatterRec.attenuation * scV * (color(scattered, tree, depth +1 )/pdfVal);
 	
 }
 

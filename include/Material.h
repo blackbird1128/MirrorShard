@@ -2,12 +2,21 @@
 #include "Ray.h"
 #include "Hitable.h"
 #include "Color.h"
+#include "pdf.h"
 class HitRecord;
+
+struct scatterRecord {
+	Ray specular_ray;
+	Color attenuation;
+	std::unique_ptr<pdf> pdfPointer;
+};
+
+
 
 class Material
 {
 public:
-	virtual bool scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered )
+	virtual bool scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered )
 	{
 		return false;
 	};
@@ -19,6 +28,9 @@ public:
 	{
 		return Color(0, 0, 0);
 	};
+
+	virtual bool isSpecular() = 0;
+
 };
 
 

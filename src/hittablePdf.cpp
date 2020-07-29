@@ -16,3 +16,8 @@ Vec3 hittablePdf::generate()
 {
 	return object->samplePoint(origin);
 }
+
+void hittablePdf::setOrigin(Vec3 newOrigin)
+{
+	origin = newOrigin;
+}

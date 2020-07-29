@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Image.h"
 #include "BVHNode.h"
+#include "hittablePdf.h"
 #include <vector>
 #include <random>
 #include <memory>
@@ -12,7 +13,14 @@ class Scene
 {
 public:
 
-	Scene(Camera& sceneCamera, std::vector<HittablePtr> objToSample) : cam(sceneCamera), BVHinitialized(false) { sampledObjects = objToSample; };
+	Scene(Camera& sceneCamera, std::vector<HittablePtr> objToSample) : cam(sceneCamera), BVHinitialized(false)
+	{
+		for (int i = 0; i < objToSample.size(); i++)
+		{
+			sampledPdf.push_back(hittablePdf(std::move(objToSample[i]), Vec3(0, 0, 0)));
+		}
+	
+	};
 	Color color(Ray& r, BVHNode& tree, int depth);
 	void render(std::string filepath, int height, int width , int rayPerPixel);
 	bool hit(Ray r, float tMin, float tMax, HitRecord& rec);
@@ -28,7 +36,7 @@ private:
 	BVHNode sceneTree;
 	bool BVHinitialized;
 	std::vector<HittablePtr> Objects;
-	std::vector<HittablePtr> sampledObjects;
+	std::vector<hittablePdf> sampledPdf;
 
 };
 

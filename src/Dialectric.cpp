@@ -33,12 +33,13 @@ bool Dialectric::refract(const Vec3& v, Vec3& n, float niOverNt, Vec3& refracted
 	}
 }
 
-bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& scattered)
+bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered)
 {
 	Vec3 outwardNormal;
 	Vec3 reflected = reflect(unitVector(rayIn.direction()), rec.normal);
 	float niOverNt;
-	attenuation = Color(1.0,1.0,1.0);
+	scatterRec.attenuation  = Color(1.0,1.0,1.0);
+	scatterRec.pdfPointer = nullptr;
 	Vec3 refracted;
 	float cosine;
 	float reflectProb;
@@ -73,16 +74,21 @@ bool Dialectric::scatter(Ray& rayIn, HitRecord& rec, Color& attenuation, Ray& sc
 	if (utils::quickRandom() < reflectProb) {
 		Vec3 rdInSphere = utils::randomInUnitSphere();
 
-		scattered = Ray(rec.p, reflected +  rdInSphere);
+		scatterRec.specular_ray = Ray(rec.p, reflected +  rdInSphere);
 
 		return (dot(scattered.direction(), rec.normal) > 0);
 
 	}
 	else {
-		scattered = Ray(rec.p, refracted);
+		scatterRec.specular_ray = scattered = Ray(rec.p, refracted);
 	}
 	return true;
 
 
 
+}
+
+bool Dialectric::isSpecular()
+{
+	return true;
 }

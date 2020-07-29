@@ -4,9 +4,10 @@
 
 MixturePdf::MixturePdf(std::vector<pdfPtr> pdfList)
 {
-	for(auto& pdf : pdfList )
+	for(int i = 0 ; i < pdfList.size(); i++)
 	{
-		pdfMix.push_back(std::move(pdf));
+		pdfMix.push_back(std::move(pdfList[i]));
+	
 	}
 }
 
