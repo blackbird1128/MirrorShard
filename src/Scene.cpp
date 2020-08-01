@@ -56,13 +56,15 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 	
 
 	HitRecord rec;
-	if (depth > 3)
+	if (depth > 5)
 	{
 		return Color(0, 0, 0);
 	}
 	if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
 	{
-		return (Color(0, 0, 0));
+		Vec3 unitDirection = unitVector(r.direction());
+		float t = 0.5 * (unitDirection.y + 1.0);
+		return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
 	}
 
 
@@ -88,32 +90,37 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 		actualPdf.push_back(std::move(temp));
 	}
 	
-
-
-	MixturePdf hittableMix(std::move(actualPdf));
-	//std::vector<pdfPtr> secondMixVec;;
-	//secondMixVec.push_back(std::move(scatterRec.pdfPointer));
-//	secondMixVec.push_back(std::move(std::make_unique<pdfPtr>(hittableMix)));
-	//MixturePdf finalMix(std::move(secondMixVec));
-
-
+	float pdfVal;
+	Vec3 dir;
 	Vec3 pdfDirection;
-	if (utils::quickRandom() < 0.5)
+	if (actualPdf.size() > 0)
 	{
-		pdfDirection = hittableMix.generate();
+
+		MixturePdf hittableMix(std::move(actualPdf));
+
+
+		if (utils::quickRandom() < 0.5)
+		{
+			pdfDirection = hittableMix.generate();
+		}
+		else
+		{
+			pdfDirection = scatterRec.pdfPointer->generate();
+		}
+
+		scattered = Ray(rec.p, pdfDirection);
+		dir = scattered.direction();
+		pdfVal = hittableMix.value(dir) * 0.5 + 0.5 * scatterRec.pdfPointer->value(dir);
 	}
 	else
 	{
+		dir = scattered.direction();
+		scattered = Ray(rec.p, pdfDirection);
 		pdfDirection = scatterRec.pdfPointer->generate();
+		pdfVal = scatterRec.pdfPointer->value(dir);
 	}
-
-
-	scattered = Ray(rec.p,pdfDirection);
-	Vec3 dir = scattered.direction();
-	float pdfVal = hittableMix.value(dir) * 0.5 + 0.5 * scatterRec.pdfPointer->value(dir);
-;
 	float scV = rec.mat->scatteringPdf(r, rec, scattered);
-	return emitted + scatterRec.attenuation * scV * (color(scattered, tree, depth +1 )/pdfVal);
+	return emitted + scatterRec.attenuation * scV * color(scattered, tree, depth +1 )/pdfVal;
 	
 }
 
@@ -138,6 +145,18 @@ void Scene::render(std::string filepath, int height, int width , int rayPerPixel
 				Ray r = cam.getRay(u, v);
 				Color addedColor = color(r, sceneTree, 0);
 
+				if (col.r != col.r)
+				{
+					col.r = 0;
+ 				}
+				if (col.g != col.g)
+				{
+					col.g = 0;
+				}
+				if (col.b != col.b)
+				{
+					col.b = 0;
+				}
 				col += addedColor;
 
 
