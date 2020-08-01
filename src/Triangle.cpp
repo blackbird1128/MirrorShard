@@ -42,23 +42,14 @@ bool Triangle::hit(Ray r, float tMin, float tMax, HitRecord& rec) // https://fr.
 		return false;
 	}
 
-	Vec3 v0 = vertex1 - vertex0, v1 = vertex2 - vertex0, v2 = r.pointAt(hitDist) - vertex0;
-	float d00 = dot(v0, v0);
-	float d01 = dot(v0, v1);
-	float d11 = dot(v1, v1);
-	float d20 = dot(v2, v0);
-	float d21 = dot(v2, v1);
-	float invDenom = 1.0 / (d00 * d11 - d01 * d01);
-	float v = (d11 * d20 - d01 * d21) * invDenom;
-	float w = (d00 * d21 - d01 * d20) * invDenom;
-	float u = 1.0f - v - w;
+
 
 
 	const float thirdBaryCoord = 1 - (firstBaryCoord + secondBaryCoord);
 	rec.mat = mat;
 	rec.t = hitDist;
-	rec.u = vertex0uv.x * u + vertex1uv.x * v + vertex2uv.x * w; 
-	rec.v = vertex0uv.y * u + vertex1uv.y * v + vertex2uv.y * w;
+	rec.u = vertex0uv.x * thirdBaryCoord + vertex1uv.x * firstBaryCoord + vertex2uv.x * secondBaryCoord; 
+	rec.v = vertex0uv.y * thirdBaryCoord + vertex1uv.y * firstBaryCoord + vertex2uv.y * secondBaryCoord;
 	rec.normal = (vertex0Normal * thirdBaryCoord + vertex1Normal * firstBaryCoord + vertex2Normal * secondBaryCoord).makeUnitVector();
 	rec.p = r.pointAt(hitDist);
 	return true;
