@@ -15,6 +15,15 @@ class utils
 {
 
 public:
+
+
+
+	static float saturate(float x)
+	{
+		x = std::max(0.0f, x);
+		return std::min(x, 1.0f );
+	
+	}
 	static Vec3 randomInUnitSphere()
 	{
 		float u1 = dis(gen);

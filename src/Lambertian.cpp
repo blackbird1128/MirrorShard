@@ -14,18 +14,17 @@ Lambertian::Lambertian(std::shared_ptr<Texture> tex)
 
 bool Lambertian::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec,  Ray& scattered  )
 {
-	ONB uvw;
-	uvw.buildFromW(rec.normal);
-	Vec3 direction = uvw.local(utils::randomCosineDirection());
+	//std::cout <<  "lambertian " << scattered.direction() << std::endl;
 	scatterRec.attenuation  = matTexture->getColor(rec.u, rec.v);
 	scatterRec.pdfPointer = std::move(std::make_unique<cosinePdf>(rec.normal));
 	return true;
 }
 
-float Lambertian::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
+Color Lambertian::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
 {
 	float cosine = dot(rec.normal, unitVector(scattered.direction()));
-	return cosine < 0 ? 0 : cosine / 3.14159;
+	float a  =  cosine < 0 ? 0 : cosine / 3.14159;
+	return Color(a, a, a);
 }
 
 bool Lambertian::isSpecular()

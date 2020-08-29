@@ -20,9 +20,9 @@ public:
 	{
 		return false;
 	};
-	virtual float scatteringPdf(Ray& rayIn , HitRecord& rec , Ray& scattered)
+	virtual Color scatteringPdf(Ray& rayIn , HitRecord& rec , Ray& scattered)
 	{
-		return 0.0;
+		return Color(0,0,0);
 	}
 	virtual Color getEmissive()
 	{

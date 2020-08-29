@@ -14,7 +14,7 @@ public:
 	
 	}
 	bool  scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered) override;
-	float scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered) override;
+	Color scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered) override;
 	bool  isSpecular() override;
 
 

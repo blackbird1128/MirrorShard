@@ -15,7 +15,7 @@ bool OrenNayar::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, R
 
 
 
-float OrenNayar::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
+Color OrenNayar::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
 {
 	float lightCosine = dot(rec.normal, unitVector(scattered.direction())); // cos 0i
 	float camCosine = dot(rec.normal, unitVector(rayIn.direction())); // cos 0r
@@ -25,7 +25,8 @@ float OrenNayar::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
 	float alpha = std::max(Oi, Or);
 	float beta = std::min(Oi, Or);
 	float result = lightCosine/ 3.14159265 * (A + (B * std::max(0.0f, cos(Oi - Or))) * sin(alpha) * tan(beta));
-	return std::max(0.0f, result);
+	float a =  std::max(0.0f, result);
+	return Color(0, 0, 0);
 }
 bool OrenNayar::isSpecular()
 {

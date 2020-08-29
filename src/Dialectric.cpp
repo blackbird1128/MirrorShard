@@ -10,9 +10,10 @@ Dialectric::Dialectric(float sdIndex , Color  albed )
 
 float Dialectric::shlick(float cosine, float refIndex)
 {
-	float r0 = (1.0 - refIndex) / (1.0 + refIndex);
-	r0 = r0 * r0;
-	return r0 + (1.0 - r0) * pow(1.0 - cosine, 5);
+	float f1 = (refIndex - 1.0) * (refIndex - 1.0);
+	float f2 = (1.0 + refIndex) * (1.0 + refIndex);
+	float fo = f1 / f2;
+	return fo + (1.0 - fo) * pow(1.0 - cosine, 5);
 }
 
 bool Dialectric::refract(const Vec3& v, Vec3& n, float niOverNt, Vec3& refracted)
