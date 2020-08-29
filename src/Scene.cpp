@@ -51,17 +51,14 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 	*/
 
 
-
-
-	
-
 	HitRecord rec;
-	if (depth > 5)
+	if (depth > 50)
 	{
 		return Color(0, 0, 0);
 	}
 	if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
 	{
+		
 		Vec3 unitDirection = unitVector(r.direction());
 		float t = 0.5 * (unitDirection.y + 1.0);
 		return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
@@ -79,7 +76,7 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 	if (rec.mat->isSpecular())
 	{
 
-		return scatterRec.attenuation * color(scatterRec.specular_ray, tree, depth + 1);
+		return scatterRec.attenuation *  color(scatterRec.specular_ray, tree, depth + 1);
 	}
 	
 	std::vector<pdfPtr> actualPdf;
@@ -119,7 +116,7 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 		pdfDirection = scatterRec.pdfPointer->generate();
 		pdfVal = scatterRec.pdfPointer->value(dir);
 	}
-	float scV = rec.mat->scatteringPdf(r, rec, scattered);
+	Color scV = rec.mat->scatteringPdf(r, rec, scattered);
 	return emitted + scatterRec.attenuation * scV * color(scattered, tree, depth +1 )/pdfVal;
 	
 }
@@ -131,20 +128,20 @@ void Scene::render(std::string filepath, int height, int width , int rayPerPixel
 	std::random_device rd;
 	std::mt19937 gen;
 
-
+	int constRay = rayPerPixel;
 	for (int j = 0; j < height; j++)
 	{
 		for (int i = 0; i < width; i++)
 		{
 			Color col(0, 0, 0);
+			std::vector<Color> meanColor;  // used for quick importance sampling
 			for (int k = 0; k < rayPerPixel; k++)
 			{
-
+				
 				float u = float(i + dis(gen)) / float(width);
 				float v = float(j + dis(gen)) / float(height);
 				Ray r = cam.getRay(u, v);
 				Color addedColor = color(r, sceneTree, 0);
-
 				if (col.r != col.r)
 				{
 					col.r = 0;
@@ -157,10 +154,13 @@ void Scene::render(std::string filepath, int height, int width , int rayPerPixel
 				{
 					col.b = 0;
 				}
+				if (k <= 5 && constRay > 5)
+				{
+
+					meanColor.push_back(addedColor);
+
+				}
 				col += addedColor;
-
-
-
 			}
 			col = col / rayPerPixel;
 			col.clamp();
