@@ -4,30 +4,67 @@
 #include "ONB.h"
 #include "cosinePdf.h"
 
-CookTorance::CookTorance(float roughness, float ior  ,  std::shared_ptr<Texture> tex)
+CookTorance::CookTorance(float roughness, Vec3 ior, Vec3 kIor, std::shared_ptr<Texture> tex)
 {
 	roughtParameter = roughness;
 	matIor = ior;
+	matIorAbsorbtion = kIor;
+	matTexture = tex;
+}
+
+CookTorance::CookTorance(ParameterMap roughness, Vec3 ior, Vec3 kIor, std::shared_ptr<Texture> tex)
+{
+	roughtParameter = 1.0;
+	roughtnessMap = roughness;
+	matIor = ior;
+	matIorAbsorbtion = kIor;
 	matTexture = tex;
 }
 
 bool CookTorance::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec, Ray& scattered)
 {
 
-	 m = getGGXMicrofacet(roughtParameter , rec.normal );
+
+
+	float iterationRoughness = roughtParameter;
+
+	if (!roughtnessMap.isEmpty())
+	{
+
+		iterationRoughness = roughtnessMap.getParameter(rec.u, rec.v);
+		//std::cout << "iteration roughness : " << iterationRoughness << std::endl;
+	}
+	
+
+	 m = getGGXMicrofacet(iterationRoughness , rec.normal );
 	 Vec3 reflected = unitVector(reflect(unitVector(rayIn.direction()), unitVector(m)));
 	 scatterRec.specular_ray = Ray(rec.p, reflected);
+	 scattered = scatterRec.specular_ray;
+	//scatterRec.attenuation = Color(1.0,1.0,1.0);
+	Color F(fresnelApproximation(matIor.x, matIorAbsorbtion.x, rayIn, rec, scattered), fresnelApproximation(matIor.y, matIorAbsorbtion.y, rayIn, rec, scattered), fresnelApproximation(matIor.z, matIorAbsorbtion.z, rayIn, rec, scattered));
+	//F =  shlick(dot(rayIn.direction(), m), Color(0.7, 0.7, 0.7));
+
+	if (dot(scattered.direction(), m) > 0.0f && dot(rec.normal, scattered.direction()) > 0.0f)
+	{
 
 
+		float woWg = abs(dot(rayIn.direction(), rec.normal));
+		float woWm = abs(dot(rayIn.direction(), m));
+		float wmWg = abs(dot(m, rec.normal));
+		//float d = D(m, rec.normal);
+		float g = G(rayIn.direction(), scattered.direction(), m, rec.normal, iterationRoughness);
+		Color finalColor = (g * F * woWm) / (std::max(wmWg * woWg, 0.00001f));
+		scatterRec.attenuation =  finalColor;// *abs(dot(rec.normal, unitVector(scattered.direction())));
+	}
+	else
+	{
+		scatterRec.attenuation =  Color(0, 0, 0);
+	}
 
-	scatterRec.attenuation = Color(1.0,1.0,1.0);
-
-	//scatterRec.pdfPointer = std::move(std::make_unique<cosinePdf>(m));
-
-	std::unique_ptr<GGXSmithPdf> GGXpdf = std::make_unique<GGXSmithPdf>(m, rec.normal, rayIn.direction()  , roughtParameter);
+	//std::unique_ptr<GGXSmithPdf> GGXpdf = std::make_unique<GGXSmithPdf>(m, rec.normal, rayIn.direction()  , roughtParameter);
 
 
-	scatterRec.pdfPointer = std::move(GGXpdf);
+	scatterRec.pdfPointer = nullptr;
 
 	return (dot(scatterRec.specular_ray.direction(),m ) > 0);
 }
@@ -35,44 +72,10 @@ bool CookTorance::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec,
 Color CookTorance::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
 {
 
-
-		//std::cout << m << std::endl;
-
-		Color F(fresnelApproximation(0.15557, 3.6024, rayIn, rec, scattered), fresnelApproximation(0.42415, 2.4721, rayIn, rec, scattered), fresnelApproximation(1.3831, 1.9155, rayIn, rec, scattered));
-		//F =  shlick(dot(rayIn.direction(), m), Color(0.7, 0.7, 0.7));
-		Vec3 F2 = FresnelDieletricConductor(Vec3(01, 01, 1.3831), Vec3(3.6024, 2.4721, 1.9155), dot(rayIn.direction(), m));
-		//std::cout << F2 << std::endl; 
-		//F = Color(F2.x, F2.y, F2.z);
-		//F = Color(1.0, 1.0, 1.0);
 		/*
-		NdotL = abs(dot(rec.normal, L));
-	    NdotV = abs(dot(rec.normal, rayIn.direction()));
+		Color F(fresnelApproximation(matIor.x, matIorAbsorbtion.x, rayIn, rec, scattered), fresnelApproximation(matIor.y, matIorAbsorbtion.y, rayIn, rec, scattered), fresnelApproximation(matIor.z, matIorAbsorbtion.z, rayIn, rec, scattered));
 
 
-		//scatterRec.pdfPointer = nullptr;
-		Color ggxTerm = (D2 * Gt * F )/ (4 * NdotL * NdotV + 0.000001)  + Color(0.000000001, 0.000000001, 0.000000001) ;
-		float firstTerm = positiveCaracteristic(dot(scattered.direction(), m) / dot(scattered.direction(), rec.normal));
-		float cos0v = dot(unitVector(scattered.direction()), unitVector(rec.normal));
-		float tan20v = (1 - cos0v * cos0v) / (cos0v * cos0v);
-		std::cout << "tan2ov : " << tan20v << std::endl;
-		float secondTerm = 2 /(1 + sqrt((1 + roughtParameter * roughtParameter * tan20v)));
-		std::cout << firstTerm * secondTerm << std::endl;
-
-
-		std::cout << "G : " << G(rayIn.direction(), scattered.direction(), m, rec.normal) << std::endl;
-		std::cout << "D: " << D(m, rec.normal) << std::endl; 
-
-		float topTerm = roughtParameter * roughtParameter * positiveCaracteristic(dot(m, rec.normal));
-		float cos0m = dot(m, rec.normal);
-		float cos40m = cos0m * cos0m * cos0m * cos0m;
-		float tan20m = (1 - cos0m * cos0m) / (cos0m * cos0m);
-		float secondBottomTerm = (roughtParameter * roughtParameter + tan20m) * (roughtParameter * roughtParameter + tan20m);
-		std::cout << "cos0m" << cos0m << std::endl;
-		float bottomTerm = 3.121592 * cos40m * secondBottomTerm;
-		float finalTerm = topTerm / bottomTerm;
-		std::cout << "first Term : " <<  topTerm << std::endl;
-		std::cout << "bottom Term " << bottomTerm << std::endl;
-		*/
 		if (dot(scattered.direction(), m) > 0.0f && dot(rec.normal , scattered.direction()) > 0.0f)
 		{
 
@@ -81,14 +84,16 @@ Color CookTorance::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
 			float woWm = abs(dot(rayIn.direction(), m));
 			float wmWg = abs(dot(m, rec.normal));
 			float d = D(m, rec.normal);
-			float g = G(rayIn.direction(), scattered.direction(), m, rec.normal);
-			Color finalColor = (g  * F* woWm) / (wmWg * woWg  + 1e-8);
+			float g = G(rayIn.direction(), scattered.direction(), m, rec.normal,roughtParameter);
+			Color finalColor =(g  * F* woWm) / ( std::max(wmWg * woWg  , 0.00001f));
 			return finalColor;// *abs(dot(rec.normal, unitVector(scattered.direction())));
 		}
 		else
 		{
 			return Color(0, 0, 0);
 		}
+		*/
+	return Color(0, 0, 0);
 		//return Color(D,D,D);
 
 
@@ -96,7 +101,7 @@ Color CookTorance::scatteringPdf(Ray& rayIn, HitRecord& rec, Ray& scattered)
 
 bool CookTorance::isSpecular()
 {
-	return false;
+	return true;
 }
 
 
@@ -132,17 +137,7 @@ float CookTorance::ggxNormalDistribution(float NdotH, float roughness)
 	return a2 / (d * d * 3.141592);
 }
 
-float CookTorance::schlickMaskingTerm(float NdotL, float NdotV, float roughness)
-{
-	// Karis notes they use alpha / 2 (or roughness^2 / 2)
-	float k = roughness * roughness / 2;
 
-	// Compute G(v) and G(l).  These equations directly from Schlick 1994
-	//     (Though note, Schlick's notation is cryptic and confusing.)
-	float g_v = NdotV / (NdotV * (1 - k) + k);
-	float g_l = NdotL / (NdotL * (1 - k) + k);
-	return g_v * g_l;
-}
 
 Vec3 CookTorance::getGGXMicrofacet(float roughtness, Vec3 normal)
 {
@@ -151,11 +146,11 @@ Vec3 CookTorance::getGGXMicrofacet(float roughtness, Vec3 normal)
 	float e1 = utils::quickRandom();
 	float e2 = utils::quickRandom();
 
-	float a2 = roughtParameter * roughtParameter;
+	float a2 = roughtness * roughtness;
 	ONB uvw;
 	uvw.buildFromW(normal);
 
-	float inclination = atan(roughtParameter * sqrt(e1 / (1.0 - e1))); // ?
+	float inclination = atan(roughtness * sqrt(e1 / (1.0 - e1))); // ?
 	float azimuth = 2.0 * 3.14159265359 * e2; // f
 	float x = sin(inclination) * cos(azimuth);
 	float y = sin(inclination) * sin(azimuth);
@@ -166,18 +161,18 @@ Vec3 CookTorance::getGGXMicrofacet(float roughtness, Vec3 normal)
 	return microNormal;
 }
 
-float CookTorance::G(Vec3 inDirection, Vec3 outDirection, Vec3 m, Vec3 n)
+float CookTorance::G(Vec3 inDirection, Vec3 outDirection, Vec3 m, Vec3 n,float roughness)
 {
-	return G1(unitVector(inDirection) , m , n ) * G1(unitVector(outDirection), m, n);
+	return G1(unitVector(inDirection) , m , n , roughness) * G1(unitVector(outDirection), m, n , roughness);
 }
 
-float CookTorance::G1(Vec3 v, Vec3 m, Vec3 n)
+float CookTorance::G1(Vec3 v, Vec3 m, Vec3 n,float  roughness)
 {
 	float firstTerm = positiveCaracteristic(dot(v, m) / dot(v, n));
 	float cos0v = dot(unitVector(v), unitVector(n));
 	float tan20v = (1 - cos0v * cos0v) / (cos0v * cos0v);
 
-	float secondTerm = 2 / (1 + sqrt((1 + roughtParameter * roughtParameter * tan20v)));
+	float secondTerm = 2 / (1 + sqrt((1 + roughness * roughness * tan20v)));
 	return firstTerm * secondTerm;
 }
 

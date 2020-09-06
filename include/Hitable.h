@@ -29,6 +29,8 @@ public:
 	virtual AABB getAABB() = 0;
 	virtual Vec3 getCenter() = 0;
 	virtual float pdf(Vec3& origin, Vec3& direction) { return 0; }
-	virtual Vec3 samplePoint(Vec3& origin) { return Vec3(0, 0, 0); }
+	virtual Vec3 samplePoint(Vec3& origin) { 
+		std::cout << "[WARNING] sampling isn't implemented for this hittable " << std::endl;
+	return Vec3(0, 0, 0); }
 };
 using HittablePtr = std::shared_ptr<Hittable>;

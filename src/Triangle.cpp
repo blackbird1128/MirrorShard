@@ -52,6 +52,7 @@ bool Triangle::hit(Ray r, float tMin, float tMax, HitRecord& rec) // https://fr.
 	rec.v = vertex0uv.y * thirdBaryCoord + vertex1uv.y * firstBaryCoord + vertex2uv.y * secondBaryCoord;
 	rec.normal = (vertex0Normal * thirdBaryCoord + vertex1Normal * firstBaryCoord + vertex2Normal * secondBaryCoord).makeUnitVector();
 	rec.p = r.pointAt(hitDist);
+	rec.p = rec.p + 0.00001 * rec.normal;
 	return true;
 }
 
