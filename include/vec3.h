@@ -21,12 +21,15 @@ public:
 	Vec3 operator*=(float t);
 	Vec3 operator*(Vec3 vec2);
 	Vec3 operator/(Vec3 vec2);
-	
-	
+	float max();
+	float min();
+
 
 	float x;
 	float y;
-	float z; 
+	float z;
+
+
 
 };
 

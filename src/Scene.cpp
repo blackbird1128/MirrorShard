@@ -8,51 +8,9 @@
 Color Scene::color(Ray& r, BVHNode& tree, int depth)
 {
 
-	/*
-	if (tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
-	{ 
-
-		Ray scattered;
-		Color attenuation;
-		if (depth < 5 && rec.mat->scatter(r, rec, attenuation, scattered))
-		{
-			return attenuation * color(scattered, tree, depth + 1);
-		}
-		else
-		{
-			return Color(0, 0, 0);
-		}
-	}
-	else
-	{
-		Vec3 unitDirection = unitVector(r.direction());
-		float t = 0.5 * (unitDirection.y + 1.0);
-		return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
-	}
-	*/
-
-	/*
-	if (depth > 3)
-	{
-		return Color(0, 0, 0);
-	}
-
-	if (!tree.hit(r, 0.001, std::numeric_limits<float>::max(), rec))
-		return Color(0,0,0);
-
-	Ray scattered;
-	Color attenuation;
-	Color emitted = rec.mat->getEmissive();
-
-	if (!rec.mat->scatter(r, rec, attenuation, scattered))
-		return emitted;
-
-	return emitted + attenuation * color(scattered, tree, depth +1);
-	*/
-
 
 	HitRecord rec;
-	if (depth > 50)
+	if (depth > maxDepthParameter)
 	{
 		return Color(0, 0, 0);
 	}
@@ -67,15 +25,18 @@ Color Scene::color(Ray& r, BVHNode& tree, int depth)
 
 	Ray scattered;
 	float pdf = 0;
+
 	Color emitted = rec.mat->getEmissive();
 	scatterRecord scatterRec;
 	if (!rec.mat->scatter(r, rec, scatterRec, scattered))
 	{
+		
 		return emitted;
 	}
+
 	if (rec.mat->isSpecular())
 	{
-
+		
 		return scatterRec.attenuation *  color(scatterRec.specular_ray, tree, depth + 1);
 	}
 	
@@ -163,9 +124,8 @@ void Scene::render(std::string filepath, int height, int width , int rayPerPixel
 				col += addedColor;
 			}
 			col = col / rayPerPixel;
-			col.clamp();
 			col = Color(pow(col.r, 1 / 2.2), pow(col.g, 1 / 2.2), pow(col.b, 1 / 2.2));
-
+			col = col.clamp();
 			im.setPixel(j, i, col);
 
 
@@ -177,6 +137,20 @@ void Scene::render(std::string filepath, int height, int width , int rayPerPixel
 	im.toPngFile(filepath);
 
 
+}
+
+Vec3 Scene::Uncharted2Tonemap(Vec3 x)
+{
+	// https://frictionalgames.blogspot.com/2012/09/tech-feature-hdr-lightning.html
+	float A = 0.15;
+	float B = 0.50;
+	float C = 0.10;
+	float D = 0.20;
+	float E = 0.02;
+	float F = 0.30;
+
+	return ((x * (A * x + (Vec3(1, 1, 1) * C * B)) + (Vec3(1,1,1)* D * E)) / (x * (A * x + (Vec3(1,1,1)*B)) +(Vec3(1,1,1)*  D * F))) - (Vec3(1,1,1)*( E / F));
+	
 }
 
 bool Scene::hit(Ray r, float tMin, float tMax, HitRecord& rec)
