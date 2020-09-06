@@ -1,7 +1,11 @@
 #include "Image.h"
 #include "lodepng.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <fstream>
 #include <iostream>
+
+
 
 Image::Image(int y, int x)
 {
@@ -26,7 +30,32 @@ void Image::setPixel(int y, int x, Color col)
 
 int Image::loadFromFile(std::filesystem::path filepath)
 {
+	stbi_ldr_to_hdr_gamma(1.0f);
+
+	//stbi_set_flip_vertically_on_load(true);
+
+	int components;
+
+	float *imageData = stbi_loadf(filepath.string().c_str(),
+		&width, &height, &components, 3);
+	for (auto i = 0  ; i <height; i++)
+	{
+		for (auto j = 0; j < width; j++)
+		{
+
+			unsigned bytePerPixel = 3;
+			float* pixelOffset = imageData + (j + width * i) * bytePerPixel;
+			float r = pixelOffset[0];
+			float g = pixelOffset[1];
+			float b = pixelOffset[2];
+			pixels.push_back(Color(r, g, b));
+		}
+	}
+	stbi_image_free(imageData);
+	//reversePixels();
 	std::vector<unsigned char> data;
+
+	/*
 	unsigned int imWidth, imHeight;
 	if (filepath.extension() == ".png")
 	{
@@ -54,6 +83,8 @@ int Image::loadFromFile(std::filesystem::path filepath)
 		pixels.push_back(Color(data[i]*invVal, data[i +1 ]*invVal , data[i + 2 ]*invVal ));
 		
 	}
+	*/
+	return 0;
 }
 
 void Image::reversePixels()
