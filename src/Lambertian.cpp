@@ -14,7 +14,7 @@ Lambertian::Lambertian(std::shared_ptr<Texture> tex)
 
 bool Lambertian::scatter(Ray& rayIn, HitRecord& rec, scatterRecord& scatterRec,  Ray& scattered  )
 {
-	//std::cout <<  "lambertian " << scattered.direction() << std::endl;
+
 	scatterRec.attenuation  = matTexture->getColor(rec.u, rec.v);
 	scatterRec.pdfPointer = std::move(std::make_unique<cosinePdf>(rec.normal));
 	return true;

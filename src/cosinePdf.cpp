@@ -11,3 +11,6 @@ Vec3 cosinePdf::generate()
 {
 	return uvw.local(utils::randomCosineDirection());
 }
+
+
+

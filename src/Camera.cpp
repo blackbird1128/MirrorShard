@@ -3,7 +3,7 @@
 Camera::Camera(Vec3 lookfrom , Vec3 lookat , Vec3 vup ,float vfov , float aspect)
 {
 	Vec3 u, v, w;
-	float theta = vfov * 3.14159265359 / 180;
+	float theta = vfov * (3.14159265359 / 180);
 	float halfHeight = tan(theta / 2);
 	float halfWidth = aspect * halfHeight;
 	origin = lookfrom;

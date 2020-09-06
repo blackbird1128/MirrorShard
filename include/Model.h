@@ -13,7 +13,7 @@ public:
 	Model() = default;
 	void loadFromFile(std::string filename);
 	void setMaterial(std::shared_ptr<Material> m);
-
+	void scale(float scaleFactor);
 	std::vector<Triangle> triangles;
 private:
 
